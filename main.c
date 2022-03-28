@@ -19,6 +19,8 @@ int main(int argc, char *argv[]){
     char* TCP="TCP PORT";
     char* DIR1="DIR";
     char* CD="CD";
+    char* COPY="COPY";
+    char* DEL="DELETE";
     while (1==1){
         char cwd[BUFF_SIZE];
         char command[BUFF_SIZE];
@@ -79,6 +81,58 @@ int main(int argc, char *argv[]){
             }
             continue;
         }
+        if (strncmp(COPY,command,strlen(COPY))==0)
+        {
+            char* temp=strtok(command," ");
+            char* com=temp;
+            temp=strtok(NULL," ");
+            char* FILE1=temp;
+            temp=strtok(NULL," ");
+            char* FILE2=temp;
+            FILE *f1=fopen(FILE1,"rb");
+            FILE *f2=fopen(FILE2,"wb");
+            if(f1==NULL || f2==NULL)
+            {
+                perror("ERR");
+
+            }
+            else{
+                char content;
+                content=fgetc(f1);
+                while(content!=EOF)
+                {
+                    fputc(content,f2);
+                    content=fgetc(f1);
+                }
+                fclose(f1);
+                fclose(f2);
+            }
+            continue;
+        }
+        if (strncmp(DEL,command,strlen(DEL))==0)
+        {
+            char* temp=strtok(command," ");
+            char* com=temp;
+            temp=strtok(NULL," ");
+            char* filename=temp;
+            if(unlink(filename)==-1)
+            {
+                perror("ERR");
+            }
+            continue;
+        }
+        if (strncmp(DEL,command,strlen(DEL))==0)
+        {
+            char* temp=strtok(command," ");
+            char* com=temp;
+            temp=strtok(NULL," ");
+            char* filename=temp;
+            if(unlink(filename)==-1)
+            {
+                perror("ERR");
+            }
+            continue;
+        }
         // else{
         //     if(system(command)==-1)
         //     {
@@ -88,8 +142,16 @@ int main(int argc, char *argv[]){
         else{
             if(!fork())
             {
-                 char *argList[]={command,NULL};
-                if(execvp(command,argList)==-1)
+                char *argList[BUFF_SIZE];
+                char* temp=strtok(command," ");
+                char* com=temp;
+                int index=0;
+                while(temp!=NULL)
+                {
+                    argList[index++]=temp;
+                    temp=strtok(NULL," ");
+                }
+                if(execvp(com,argList)==-1)
                 {
                     perror("ERR");
                     exit(1);
