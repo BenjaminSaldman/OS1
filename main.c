@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 #define BUFF_SIZE 4096
-#define SERVER_PORT 5060
+#define SERVER_PORT 5066
 #define SERVER_IP_ADDRESS "127.0.0.1"
 int main(int argc, char *argv[]){
     char* EXIT="EXIT";
@@ -21,6 +21,9 @@ int main(int argc, char *argv[]){
     char* CD="CD";
     char* COPY="COPY";
     char* DEL="DELETE";
+    int sock=0;
+    int save=dup(1);
+    int TC=0;
     while (1==1){
         char cwd[BUFF_SIZE];
         char command[BUFF_SIZE];
@@ -48,11 +51,72 @@ int main(int argc, char *argv[]){
         }
         if (strncmp(TCP,command,strlen(TCP))==0)
         {
-            int sock = socket(AF_INET, SOCK_STREAM, 0);
+            #if defined _WIN32
+    // Windows requires initialization
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
+    {
+        printf("Failed. Error Code : %d",WSAGetLastError());
+        return 1;
+    }
+#endif
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+
+     if(sock == -1)
+    {
+        printf("Could not create socket : %d" 
+#if defined _WIN32
+	,WSAGetLastError()
+#else
+	,errno
+#endif
+		);
+    }
+
+    // "sockaddr_in" is the "derived" from sockaddr structure
+    // used for IPv4 communication. For IPv6, use sockaddr_in6
+    //
+    struct sockaddr_in serverAddress;
+    memset(&serverAddress, 0, sizeof(serverAddress));
+
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(SERVER_PORT);
+	int rval = inet_pton(AF_INET, (const char*)SERVER_IP_ADDRESS, &serverAddress.sin_addr);
+	if (rval <= 0)
+	{
+		printf("inet_pton() failed");
+		return -1;
+	}
+
+     // Make a connection to the server with socket SendingSocket.
+
+     if (connect(sock, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) == -1)
+     {
+	   printf("connect() failed with error code : %d" 
+#if defined _WIN32
+	   ,WSAGetLastError()
+#else
+	   ,errno
+#endif
+	   );
+     }
+
+     printf("connected to server\n");
+
+     // Sends some data to server
+     dup2(sock,1);
+     TC=1;
+
+     continue;
         }
         //This part was taken from: https://stackoverflow.com/questions/3554120/open-directory-using-c
         if (strncmp(DIR1,command,strlen(DIR1))==0)
         {
+            if(TC==1)
+            {
+                dup2(save,1);
+            }
             struct dirent *pDirent;
             
             DIR *pDir=opendir(cwd);
@@ -63,6 +127,10 @@ int main(int argc, char *argv[]){
             printf ("[%s]\n", pDirent->d_name);
         }
          closedir (pDir);
+         if(TC==1)
+         {
+             dup2(sock,1);
+         }
          continue;
         }
         if (strncmp(CD,command,strlen(CD))==0)
@@ -98,13 +166,14 @@ int main(int argc, char *argv[]){
             }
             else{
                 char content[BUFF_SIZE];
-                while(fread(content,BUFF_SIZE,1,f1)!=EOF)
+                while(fread(content,1,BUFF_SIZE,f1)>0)
                 {
-                    fwrite(content,BUFF_SIZE,1,f2);
+                    fwrite(content,1,BUFF_SIZE,f2);
                 }
                 fclose(f1);
                 fclose(f2);
             }
+            printf("COPIED src to dest! '\n");
             continue;
         }
         if (strncmp(DEL,command,strlen(DEL))==0)
