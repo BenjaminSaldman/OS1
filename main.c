@@ -97,12 +97,10 @@ int main(int argc, char *argv[]){
 
             }
             else{
-                char content;
-                content=fgetc(f1);
-                while(content!=EOF)
+                char content[BUFF_SIZE];
+                while(fread(content,BUFF_SIZE,1,f1)!=EOF)
                 {
-                    fputc(content,f2);
-                    content=fgetc(f1);
+                    fwrite(content,BUFF_SIZE,1,f2);
                 }
                 fclose(f1);
                 fclose(f2);
