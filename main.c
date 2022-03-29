@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 #define BUFF_SIZE 4096
-#define SERVER_PORT 5066
+#define SERVER_PORT 5500
 #define SERVER_IP_ADDRESS "127.0.0.1"
 int main(int argc, char *argv[]){
     char* EXIT="EXIT";
@@ -21,9 +21,11 @@ int main(int argc, char *argv[]){
     char* CD="CD";
     char* COPY="COPY";
     char* DEL="DELETE";
+    char* LOCK="LOCAL";
     int sock=0;
     int save=dup(1);
     int TC=0;
+    //The TCP client code was taken from the course "Communication Systems".
     while (1==1){
         char cwd[BUFF_SIZE];
         char command[BUFF_SIZE];
@@ -37,8 +39,16 @@ int main(int argc, char *argv[]){
         fgets(command,sizeof(command),stdin);
         if (*command && command[strlen(command)-1] == '\n')
             command[strlen(command)-1]=0;
-        if(strcmp(EXIT,command)==0)
+        if(strcmp(EXIT,command)==0){
+            if(TC==1)
+            {
+                send(sock,"BREAK",strlen("BREAK"),0);
+                close(sock);
+                dup2(save,1);
+                TC=0;
+            }
             break;
+        }
         if (strncmp(ECHO,command,strlen(ECHO))==0)
         {
             int i=strlen(ECHO)+1;
@@ -51,7 +61,9 @@ int main(int argc, char *argv[]){
         }
         if (strncmp(TCP,command,strlen(TCP))==0)
         {
-            #if defined _WIN32
+            if(TC==0)
+            {
+                    #if defined _WIN32
     // Windows requires initialization
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
@@ -107,10 +119,12 @@ int main(int argc, char *argv[]){
      // Sends some data to server
      dup2(sock,1);
      TC=1;
-
+            }
+    
      continue;
         }
         //This part was taken from: https://stackoverflow.com/questions/3554120/open-directory-using-c
+        //opendir,readdir and closedir are library functions (man page 3).
         if (strncmp(DIR1,command,strlen(DIR1))==0)
         {
             if(TC==1)
@@ -133,6 +147,7 @@ int main(int argc, char *argv[]){
          }
          continue;
         }
+        //chdir is a system call (because it's on part 2 in the man page).
         if (strncmp(CD,command,strlen(CD))==0)
         {
 
@@ -149,6 +164,20 @@ int main(int argc, char *argv[]){
             }
             continue;
         }
+        if(strncmp(command,LOCK,strlen(LOCK))==0)
+        {
+            if(TC==1)
+            {
+                send(sock,"BREAK",strlen("BREAK"),0);
+                close(sock);
+                dup2(save,1);
+                TC=0;
+            }
+            continue;
+        }
+        //Helped with: https://stackoverflow.com/questions/14150431/copying-a-file-in-c-with-fwrite
+        //The implementation using library functions because
+        // fread(),fopen() and fclose() are on page 3 in the man page.
         if (strncmp(COPY,command,strlen(COPY))==0)
         {
             char* temp=strtok(command," ");
@@ -188,6 +217,8 @@ int main(int argc, char *argv[]){
             }
             continue;
         }
+        //The implementation using system call because
+        // unlink is on page 2 in the man page.
         if (strncmp(DEL,command,strlen(DEL))==0)
         {
             char* temp=strtok(command," ");
@@ -200,6 +231,7 @@ int main(int argc, char *argv[]){
             }
             continue;
         }
+        //system is a library function because it's on part 3 in the man page.
         // else{
         //     if(system(command)==-1)
         //     {

@@ -1,5 +1,5 @@
 /*
-    TCP/IP-server
+    TCP/IP-server - This code was taken from the course "Communication Systems".
 */
 
 #include<stdio.h>
@@ -19,7 +19,7 @@
 #include <signal.h>
 #endif
 
-#define SERVER_PORT 5066  //The port that the server listens
+#define SERVER_PORT 5500  //The port that the server listens
 #define BUFF_SIZE 4096 
 int main()
 {
@@ -137,7 +137,9 @@ int main()
       
     	printf("A new client connection accepted\n");
         char msg[BUFF_SIZE];
-        while(1){
+        char message[] = "HELLO";
+        int messageLen = strlen(message) + 1;
+        while(strncmp(msg,"BREAK",strlen("BREAK"))!=0){
         recv(clientSocket,msg,BUFF_SIZE,0);
         printf("%s",msg);
         }
