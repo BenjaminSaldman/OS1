@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 #define BUFF_SIZE 4096
-#define SERVER_PORT 5900
+#define SERVER_PORT 4900
 #define SERVER_IP_ADDRESS "127.0.0.1"
 int main(int argc, char *argv[]){
     char* EXIT="EXIT";
@@ -52,11 +52,14 @@ int main(int argc, char *argv[]){
         if (strncmp(ECHO,command,strlen(ECHO))==0)
         {
             int i=strlen(ECHO)+1;
+            char text[BUFF_SIZE];
+            int index=0;
             while (command[i]!='\0')
             {
-                printf("%c",command[i++]);
+                text[index++]=command[i++];
             }
-            printf("\n");
+            text[index]='\0';
+            printf("%s\n",text);
             continue;
         }
         if (strncmp(TCP,command,strlen(TCP))==0)

@@ -19,7 +19,7 @@
 #include <signal.h>
 #endif
 
-#define SERVER_PORT 5900  //The port that the server listens
+#define SERVER_PORT 4900  //The port that the server listens
 #define BUFF_SIZE 4096 
 int main()
 {
