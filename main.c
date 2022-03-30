@@ -11,7 +11,7 @@
 #include <sys/wait.h>
 
 #define BUFF_SIZE 4096
-#define SERVER_PORT 5500
+#define SERVER_PORT 5900
 #define SERVER_IP_ADDRESS "127.0.0.1"
 int main(int argc, char *argv[]){
     char* EXIT="EXIT";
@@ -231,6 +231,7 @@ int main(int argc, char *argv[]){
             }
             continue;
         }
+        // Helped with https://www.tutorialspoint.com/c_standard_library/c_function_strtok.htm
         //system is a library function because it's on part 3 in the man page.
         // else{
         //     if(system(command)==-1)
