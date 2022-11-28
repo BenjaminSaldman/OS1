@@ -18,4 +18,3 @@ https://stackoverflow.com/questions/3554120/open-directory-using-c
 
 מגישים: בנימין סאלדמן וטום קולטונוב
 
-ת"ז: 325185619 323929190
